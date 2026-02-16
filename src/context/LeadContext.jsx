@@ -2,7 +2,7 @@ import { createContext, useContext, useReducer, useCallback } from 'react';
 
 const LeadContext = createContext(null);
 
-const STEPS = ['Search', 'Review', 'Enrich', 'CRM', 'Email'];
+const STEPS = ['Search', 'Review', 'Enrich', 'Dashboard', 'Email'];
 
 const initialState = {
   currentStep: 0,

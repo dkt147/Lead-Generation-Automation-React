@@ -31,29 +31,11 @@ export async function enrichContacts(companies) {
   });
 }
 
-export async function checkDuplicates(companies) {
-  return request('/monday/check-duplicates', {
+export async function pushLeadToDashboard(lead) {
+  return request('/dashboard/push-lead', {
     method: 'POST',
-    body: JSON.stringify({ companies }),
+    body: JSON.stringify({ lead }),
   });
-}
-
-export async function createLead(lead, columnMapping) {
-  return request('/monday/create-lead', {
-    method: 'POST',
-    body: JSON.stringify({ lead, columnMapping }),
-  });
-}
-
-export async function updateLead(itemId, columnValues) {
-  return request('/monday/update-lead', {
-    method: 'POST',
-    body: JSON.stringify({ itemId, columnValues }),
-  });
-}
-
-export async function getColumns() {
-  return request('/monday/columns');
 }
 
 export async function previewEmail(lead, template, senderName) {
