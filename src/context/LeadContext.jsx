@@ -2,7 +2,7 @@ import { createContext, useContext, useReducer, useCallback } from 'react';
 
 const LeadContext = createContext(null);
 
-const STEPS = ['Search', 'Review', 'Enrich', 'Dashboard', 'Email'];
+const STEPS = ['Search', 'Review', 'Enrich', 'Dashboard'];
 
 const initialState = {
   currentStep: 0,
@@ -12,7 +12,6 @@ const initialState = {
   enrichedCompanies: [],
   duplicateResults: [],
   crmResults: [],
-  emailResults: [],
   auditLog: [],
   loading: false,
   error: null,
@@ -48,13 +47,6 @@ function reducer(state, action) {
       const updated = [...state.crmResults];
       updated[action.payload.index] = { ...updated[action.payload.index], ...action.payload.data };
       return { ...state, crmResults: updated };
-    }
-    case 'SET_EMAIL_RESULTS':
-      return { ...state, emailResults: action.payload };
-    case 'UPDATE_EMAIL_RESULT': {
-      const updated = [...state.emailResults];
-      updated[action.payload.index] = { ...updated[action.payload.index], ...action.payload.data };
-      return { ...state, emailResults: updated };
     }
     case 'ADD_AUDIT':
       return { ...state, auditLog: [...state.auditLog, { ...action.payload, timestamp: new Date().toISOString() }] };

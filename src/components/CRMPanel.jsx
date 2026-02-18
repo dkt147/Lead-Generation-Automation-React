@@ -133,14 +133,7 @@ export default function CRMPanel() {
               Push to Dashboard ({readyCount})
             </button>
           )}
-          {pushedCount > 0 && (
-            <button
-              onClick={() => dispatch({ type: 'SET_STEP', payload: 4 })}
-              className="rounded-lg bg-green-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-green-700"
-            >
-              Proceed to Email
-            </button>
-          )}
+
         </div>
       </div>
 
