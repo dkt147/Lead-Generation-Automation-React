@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Icons (used by Google search results + browsers) -->
+    <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
+    <link rel="icon" type="image/png" href="/favicon.png?v=2" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
+
+    <!-- Google Fonts for signature -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet" />
+
+    <!-- Canonical URL is set per-route via React Helmet -->
+    
+    <!-- Default title/description - React Helmet will override per-page -->
+    <title>CURA | AI Automation Consultancy for SMEs & Business | Workflow Experts</title>
+    <meta name="description" content="Leading AI automation consultancy helping SMEs and businesses save time and money. Expert AI implementation for small business, customer support, operations, and intelligent workflow automation." />
+    <meta name="author" content="CURA" />
+    
+    <!-- Search engine verification -->
+    <meta name="msvalidate.01" content="03BBC8E935502F91E3ACB1099A13EBF2" />
+    
+    <script type="module" crossorigin src="/assets/index-C7DeVAaH.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CvH5UtRr.css">
+  <script defer src="https://www.cura-co.com/~flock.js" data-proxy-url="https://www.cura-co.com/~api/analytics"></script><meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5f0299b1-5ce4-4c29-bb98-dee086b9cf72/id-preview-6e51d08f--a4edb046-096c-49e1-ae5b-15897c000ffc.lovable.app-1771869336955.png" /></head>
+
+  <body>
+    <div id="root"></div>
+
+    <!-- Static content for crawlers and AIs that don't execute JavaScript -->
+    <noscript>
+      <div style="max-width:900px;margin:0 auto;padding:2rem;font-family:system-ui,sans-serif;color:#1a1a2e">
+        <header>
+          <h1>CURA — AI Workflow Automation Consultancy</h1>
+          <nav>
+            <a href="/">Home</a> |
+            <a href="/what-we-do">What We Do</a> |
+            <a href="/pricing">Pricing</a> |
+            <a href="/about">About</a> |
+            <a href="/contact">Contact</a> |
+            <a href="/blog">Blog</a> |
+            <a href="/careers">Careers</a>
+          </nav>
+        </header>
+
+        <main>
+          <section>
+            <h2>AI Automation That Pays for Itself</h2>
+            <p>CURA is a specialist AI and workflow automation consultancy helping SMEs save time and money. We embed AI into everyday work — removing admin, replacing manual processes, and delivering measurable ROI within weeks, not months.</p>
+          </section>
+
+          <section>
+            <h2>What We Do</h2>
+            <p>We don't replace people. We remove the admin that slows them down. Our consultants implement AI-powered automations across operations, sales, customer support, and professional services — using best-in-class tools like monday.com, Make, and custom AI solutions.</p>
+            <ul>
+              <li><strong>AI for Operations</strong> — Automate scheduling, reporting, compliance, and internal workflows.</li>
+              <li><strong>AI for Sales</strong> — Streamline lead qualification, CRM updates, follow-ups, and pipeline management.</li>
+              <li><strong>AI for Customer Support</strong> — Deploy AI chatbots, auto-triage tickets, and reduce response times.</li>
+              <li><strong>AI for Trade &amp; Construction</strong> — Digitise job sheets, automate quoting, and manage field operations.</li>
+              <li><strong>AI for Professional Services</strong> — Automate time tracking, client reporting, and document workflows.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Our Process</h2>
+            <ol>
+              <li><strong>Discovery</strong> — We audit your workflows and identify the highest-ROI automation opportunities.</li>
+              <li><strong>Build</strong> — Our consultants implement automations tailored to your business.</li>
+              <li><strong>Launch &amp; Optimise</strong> — We go live, monitor results, and continuously improve.</li>
+              <li><strong>Ongoing Support</strong> — Monthly retainer with dedicated consultant access and new improvements.</li>
+            </ol>
+          </section>
+
+          <section>
+            <h2>Pricing</h2>
+            <p>Setup packages from $2,995. Monthly retainers from $495/month with new automations delivered every month.</p>
+            <ul>
+              <li><strong>Starter Setup ($2,995)</strong> — 1-week engagement, 1 improvement delivered.</li>
+              <li><strong>Quick Wins ($8,995)</strong> — 3-week engagement, 3 improvements delivered.</li>
+              <li><strong>Full Enablement ($14,995)</strong> — 6-week engagement, 6 improvements delivered.</li>
+            </ul>
+            <p>Retainer tiers: Growth ($495/mo, 2 improvements), Scale ($995/mo, 4 improvements), Enterprise ($1,995/mo, 8 improvements).</p>
+          </section>
+
+          <section>
+            <h2>About CURA</h2>
+            <p>Founded by professionals frustrated with the gap between AI hype and real business impact, CURA exists to make AI accessible and profitable for small and mid-sized businesses. We combine deep technical expertise with hands-on implementation.</p>
+          </section>
+
+          <section>
+            <h2>Contact</h2>
+            <p>Ready to automate? <a href="/contact">Book a free 30-minute consultation</a> to discover how much time and money AI automation can save your business.</p>
+            <p>Email: <a href="mailto:hello@cura-co.com">hello@cura-co.com</a></p>
+          </section>
+
+          <section>
+            <h2>Use Cases</h2>
+            <ul>
+              <li><a href="/use-cases/ai-for-operations">AI for Operations</a></li>
+              <li><a href="/use-cases/ai-for-sales">AI for Sales</a></li>
+              <li><a href="/use-cases/ai-for-customer-support">AI for Customer Support</a></li>
+              <li><a href="/use-cases/ai-for-trade-construction">AI for Trade &amp; Construction</a></li>
+              <li><a href="/use-cases/ai-for-professional-services">AI for Professional Services</a></li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Blog</h2>
+            <ul>
+              <li><a href="/blog/sme-automate-without-developers">How SMEs Can Automate Without Developers</a></li>
+              <li><a href="/blog/ai-tools-smes-already-pay-for">AI Tools SMEs Already Pay For</a></li>
+              <li><a href="/blog/ai-vs-automation-what-to-implement-first">AI vs Automation: What to Implement First</a></li>
+              <li><a href="/blog/what-ai-strategy-should-include">What an AI Strategy Should Include</a></li>
+              <li><a href="/blog/workflow-automation-roi">Workflow Automation ROI</a></li>
+            </ul>
+          </section>
+        </main>
+
+        <footer>
+          <p>&copy; 2025 CURA. AI Workflow Automation Consultancy. All rights reserved.</p>
+          <p><a href="/privacy-policy">Privacy Policy</a> | <a href="/terms-of-service">Terms of Service</a></p>
+        </footer>
+      </div>
+    </noscript>
+  </body>
+</html>

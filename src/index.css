@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+/* Tailwind v4: enable class-based dark mode */
+@variant dark (&:where(.dark, .dark *));
+
+/* Smooth theme transitions */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Dark mode scrollbar */
+html.dark ::-webkit-scrollbar { background: #0d1117; }
+html.dark ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
