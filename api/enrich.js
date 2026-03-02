@@ -27,6 +27,9 @@ const APOLLO_TITLES = [
   'Manager', 'Head', 'Partner',
 ];
 
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -36,65 +39,59 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const apolloKey  = process.env.APOLLO_API_KEY;
-  const snovId     = process.env.SNOV_CLIENT_ID;
-  const snovSecret = process.env.SNOV_CLIENT_SECRET;
   const hunterKey  = process.env.HUNTER_API_KEY;
 
   const single = req.body?.company;
   const list   = single ? [single] : (req.body?.companies || []);
   if (!list.length) return res.status(400).json({ error: 'company or companies required' });
 
-  // Fetch Snov token once per request batch
-  let snovToken = null;
-  if (snovId && snovSecret) {
-    try { snovToken = await getSnovToken(snovId, snovSecret); } catch (_) {}
-  }
-
   const results = [];
 
   for (const company of list) {
     const domain = extractDomain(company.website);
-    if (!domain) {
-      results.push({ ...company, contact: null, enrichmentSource: null, enrichmentError: 'Invalid URL' });
-      continue;
-    }
 
     let contact = null;
     let source  = null;
     const errors = [];
 
-    // ── 1. Apollo: mixed_people/search (paid — returns emails directly) ──
-    // Best result: full contact (name + title + email + phone + linkedin) in one call
-    if (apolloKey && !contact) {
+    // ── 0. Check Supabase cache first ────────────────────────────────────
+    if (domain) {
+      try {
+        const cached = await lookupCache(domain);
+        if (cached) {
+          contact = cached;
+          source  = 'cache';
+        }
+      } catch (e) { errors.push(`Cache: ${e.message}`); }
+    }
+
+    // ── 1. Apollo: domain search (paid — returns emails directly) ────────
+    if (apolloKey && domain && !contact) {
       try {
         contact = await apolloSearch(domain, apolloKey);
         if (contact) source = 'apollo';
       } catch (e) { errors.push(`Apollo search: ${e.message}`); }
     }
 
-    // ── 2. Apollo: people/match (enrichment — uses credits) ──────────────
-    // Fallback when search returns nobody; needs organization_name to match
-    if (apolloKey && !contact) {
+    // ── 2. Apollo: company name search (works even without valid URL) ────
+    if (apolloKey && !contact && company.name) {
       try {
         contact = await apolloMatch(domain, company.name, apolloKey);
         if (contact) source = 'apollo-match';
       } catch (e) { errors.push(`Apollo match: ${e.message}`); }
     }
 
-    // ── 3. Snov.io: domain search (async with polling) ───────────────────
-    if (snovToken && !contact) {
-      try {
-        contact = await snovDomainSearch(domain, snovToken);
-        if (contact) source = 'snov';
-      } catch (e) { errors.push(`Snov: ${e.message}`); }
-    }
-
-    // ── 4. Hunter.io: domain search ──────────────────────────────────────
-    if (hunterKey && !contact) {
+    // ── 3. Hunter.io: domain search ──────────────────────────────────────
+    if (hunterKey && domain && !contact) {
       try {
         contact = await hunterDomainSearch(domain, hunterKey);
         if (contact) source = 'hunter';
       } catch (e) { errors.push(`Hunter: ${e.message}`); }
+    }
+
+    // ── Save to cache if freshly enriched ────────────────────────────────
+    if (contact && source !== 'cache') {
+      saveToCache(domain, contact, source).catch(() => {});
     }
 
     results.push({
@@ -104,7 +101,7 @@ export default async function handler(req, res) {
       enrichmentError: contact ? null : (errors.join(' | ') || 'No contacts found'),
     });
 
-    await sleep(300); // brief delay to stay within Apollo rate limits
+    await sleep(300);
   }
 
   return single
@@ -113,11 +110,11 @@ export default async function handler(req, res) {
 }
 
 // ── 1. Apollo: People Search ───────────────────────────────────────────────
-// POST https://api.apollo.io/api/v1/mixed_people/search
+// POST https://api.apollo.io/api/v1/mixed_people/api_search
 // Paid plan — returns verified emails, phone, linkedin in one shot
 
 async function apolloSearch(domain, apiKey) {
-  const res = await fetch('https://api.apollo.io/api/v1/mixed_people/search', {
+  const res = await fetch('https://api.apollo.io/api/v1/mixed_people/api_search', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -162,7 +159,7 @@ async function apolloSearch(domain, apiKey) {
 // Same endpoint but searches by org name instead of domain
 
 async function apolloMatch(domain, organizationName, apiKey) {
-  const res = await fetch('https://api.apollo.io/api/v1/mixed_people/search', {
+  const res = await fetch('https://api.apollo.io/api/v1/mixed_people/api_search', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -198,63 +195,7 @@ async function apolloMatch(domain, organizationName, apiKey) {
   };
 }
 
-// ── 3. Snov.io: OAuth token ────────────────────────────────────────────────
-
-async function getSnovToken(clientId, clientSecret) {
-  const res = await fetch('https://api.snov.io/v1/oauth/access_token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret }),
-  });
-  if (!res.ok) throw new Error(`Snov auth ${res.status}`);
-  const data = await res.json();
-  if (!data.access_token) throw new Error('No token');
-  return data.access_token;
-}
-
-// ── 3. Snov.io: Domain Search (async + poll) ──────────────────────────────
-
-async function snovDomainSearch(domain, token) {
-  const startRes = await fetch('https://api.snov.io/v2/domain-search/start', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ domain }),
-  });
-
-  if (startRes.status === 401) throw new Error('Invalid token');
-  if (startRes.status === 429) throw new Error('Rate limit');
-  if (!startRes.ok) throw new Error(`Snov start ${startRes.status}`);
-
-  const startData = await startRes.json();
-  const taskHash  = startData?.meta?.task_hash || startData?.task_hash;
-  if (!taskHash) throw new Error('No task_hash');
-
-  for (let i = 0; i < 5; i++) {
-    await sleep(600);
-    const r = await fetch(`https://api.snov.io/v2/domain-search/result/${taskHash}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!r.ok) continue;
-    const result = await r.json();
-    const emails = result?.data?.emails || result?.emails || [];
-    if (!emails.length) continue;
-
-    const best = pickBest(emails, (e) => (e.position || e.title || '').toLowerCase());
-    if (!best) continue;
-
-    return {
-      name:       [best.first_name, best.last_name].filter(Boolean).join(' ') || 'Contact',
-      email:      best.email,
-      position:   best.position || best.title || 'Decision Maker',
-      confidence: best.confidence || 75,
-      phone:      best.phone || '',
-      linkedin:   best.source_page || '',
-    };
-  }
-  return null;
-}
-
-// ── 4. Hunter.io: Domain Search ────────────────────────────────────────────
+// ── 3. Hunter.io: Domain Search ────────────────────────────────────────────
 
 async function hunterDomainSearch(domain, apiKey) {
   const res = await fetch(
@@ -298,10 +239,63 @@ function pickBest(items, getTitleFn) {
 
 function extractDomain(url) {
   if (!url) return null;
+  // Strip trailing (city) like "air-charter-australia.com(Armadale)"
+  let clean = url.trim().replace(/\(.*?\)\s*$/, '').trim();
+  if (!clean) return null;
   try {
-    const p = new URL(url.startsWith('http') ? url : `https://${url}`);
+    const p = new URL(clean.startsWith('http') ? clean : `https://${clean}`);
     return p.hostname.replace(/^www\./, '');
   } catch { return null; }
 }
 
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+// ── Supabase cache helpers ────────────────────────────────────────────────
+
+async function lookupCache(domain) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/enriched_leads?domain=eq.${encodeURIComponent(domain)}&select=*&limit=1`,
+    { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } },
+  );
+  if (!res.ok) return null;
+
+  const rows = await res.json();
+  if (!rows.length) return null;
+
+  const r = rows[0];
+  return {
+    name:       r.contact_name,
+    email:      r.contact_email,
+    position:   r.contact_position,
+    confidence: r.confidence,
+    phone:      r.contact_phone || '',
+    linkedin:   r.contact_linkedin || '',
+  };
+}
+
+async function saveToCache(domain, contact, source) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return;
+
+  await fetch(`${SUPABASE_URL}/rest/v1/enriched_leads`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=merge-duplicates',
+    },
+    body: JSON.stringify({
+      domain,
+      contact_name:     contact.name,
+      contact_email:    contact.email,
+      contact_position: contact.position,
+      confidence:       contact.confidence,
+      contact_phone:    contact.phone || '',
+      contact_linkedin: contact.linkedin || '',
+      source,
+      updated_at:       new Date().toISOString(),
+    }),
+  });
+}
