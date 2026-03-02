@@ -109,11 +109,12 @@ export default async function handler(req, res) {
     : res.status(200).json({ enriched: results });
 }
 
-// ── 1. Apollo: People Search ───────────────────────────────────────────────
-// POST https://api.apollo.io/api/v1/mixed_people/api_search
-// Paid plan — returns verified emails, phone, linkedin in one shot
+// ── 1. Apollo: Search + Reveal (2-step) ──────────────────────────────────
+// Step 1: api_search to find person IDs (has_email=true)
+// Step 2: people/match with ID to reveal actual email
 
 async function apolloSearch(domain, apiKey) {
+  // Step 1: Search for people at this domain
   const res = await fetch('https://api.apollo.io/api/v1/mixed_people/api_search', {
     method: 'POST',
     headers: {
@@ -123,8 +124,9 @@ async function apolloSearch(domain, apiKey) {
     },
     body: JSON.stringify({
       q_organization_domains: domain,
+      person_titles: APOLLO_TITLES,
       page: 1,
-      per_page: 10,
+      per_page: 5,
     }),
   });
 
@@ -140,23 +142,16 @@ async function apolloSearch(domain, apiKey) {
   if (!people.length) return null;
 
   // Pick best decision-maker who has an email
-  const withEmail = people.filter((p) => p.email);
+  const withEmail = people.filter((p) => p.has_email);
   const pool      = withEmail.length ? withEmail : people;
   const best      = pickBest(pool, (p) => (p.title || '').toLowerCase());
-  if (!best?.email) return null;
+  if (!best?.id || !best.has_email) return null;
 
-  return {
-    name:       [best.first_name, best.last_name].filter(Boolean).join(' ') || 'Contact',
-    email:      best.email,
-    position:   best.title || 'Decision Maker',
-    confidence: 95,
-    phone:      best.phone_numbers?.[0]?.sanitized_number || best.phone_numbers?.[0]?.raw_number || '',
-    linkedin:   best.linkedin_url || '',
-  };
+  // Step 2: Reveal contact details via people/match
+  return apolloReveal(best.id, apiKey);
 }
 
 // ── 2. Apollo: Fallback search by organization name ───────────────────────
-// Same endpoint but searches by org name instead of domain
 
 async function apolloMatch(domain, organizationName, apiKey) {
   const res = await fetch('https://api.apollo.io/api/v1/mixed_people/api_search', {
@@ -168,6 +163,7 @@ async function apolloMatch(domain, organizationName, apiKey) {
     },
     body: JSON.stringify({
       q_organization_name: organizationName,
+      person_titles: APOLLO_TITLES,
       page: 1,
       per_page: 5,
     }),
@@ -182,16 +178,36 @@ async function apolloMatch(domain, organizationName, apiKey) {
 
   const data   = await res.json();
   const people = data?.people || [];
-  const best   = people.find((p) => p.email);
-  if (!best?.email) return null;
+  const best   = people.find((p) => p.has_email);
+  if (!best?.id) return null;
+
+  return apolloReveal(best.id, apiKey);
+}
+
+// ── Apollo: Reveal email by person ID ────────────────────────────────────
+
+async function apolloReveal(personId, apiKey) {
+  const res = await fetch('https://api.apollo.io/api/v1/people/match', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Api-Key': apiKey,
+    },
+    body: JSON.stringify({ id: personId }),
+  });
+
+  if (!res.ok) return null;
+  const data = await res.json();
+  const p = data?.person;
+  if (!p?.email) return null;
 
   return {
-    name:       [best.first_name, best.last_name].filter(Boolean).join(' ') || 'Contact',
-    email:      best.email,
-    position:   best.title || 'Decision Maker',
-    confidence: 90,
-    phone:      best.phone_numbers?.[0]?.sanitized_number || '',
-    linkedin:   best.linkedin_url || '',
+    name:       [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Contact',
+    email:      p.email,
+    position:   p.title || 'Decision Maker',
+    confidence: 95,
+    phone:      p.phone_numbers?.[0]?.sanitized_number || p.phone_numbers?.[0]?.raw_number || '',
+    linkedin:   p.linkedin_url || '',
   };
 }
 
