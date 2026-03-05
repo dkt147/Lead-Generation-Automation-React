@@ -2,7 +2,7 @@ import { createContext, useContext, useReducer, useCallback } from 'react';
 
 const LeadContext = createContext(null);
 
-const STEPS = ['Search', 'Review', 'Enrich', 'Dashboard', 'Email'];
+const STEPS = ['Search', 'Review', 'Enrich', 'Dashboard', 'Email', 'Complete'];
 
 const initialState = {
   currentStep: 0,
@@ -68,6 +68,8 @@ function reducer(state, action) {
       return { ...state, notification: action.payload };
     case 'CLEAR_NOTIFICATION':
       return { ...state, notification: null };
+    case 'RESET':
+      return { ...initialState };
     default:
       return state;
   }

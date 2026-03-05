@@ -119,6 +119,12 @@ export default function EmailOutreach() {
               Send All ({pendingCount})
             </button>
           )}
+          <button
+            onClick={() => dispatch({ type: 'SET_STEP', payload: 5 })}
+            className="rounded-lg bg-green-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-green-700"
+          >
+            Finish
+          </button>
         </div>
       </div>
 

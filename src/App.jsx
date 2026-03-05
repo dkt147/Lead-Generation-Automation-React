@@ -27,6 +27,45 @@ function useDarkMode() {
   return [dark, () => setDark((d) => !d)];
 }
 
+function CompletionScreen() {
+  const { state, dispatch } = useLeadContext();
+  const enriched = state.enrichedCompanies.filter((c) => c.contact?.email).length;
+  const sent = state.emailResults.filter((r) => r?.sent).length;
+  const pushed = state.crmResults.filter((r) => r?.status === 'pushed' || r?.status === 'clay-pushed').length;
+
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+        <svg className="h-10 w-10 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Pipeline Complete!</h2>
+      <p className="mb-8 text-gray-500 dark:text-gray-400">Your lead generation pipeline has finished successfully.</p>
+      <div className="mb-8 flex gap-6">
+        <div className="rounded-xl bg-white dark:bg-gray-800 px-6 py-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
+          <p className="text-2xl font-bold text-blue-600">{enriched}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Contacts Found</p>
+        </div>
+        <div className="rounded-xl bg-white dark:bg-gray-800 px-6 py-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
+          <p className="text-2xl font-bold text-green-600">{pushed}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Pushed to CRM</p>
+        </div>
+        <div className="rounded-xl bg-white dark:bg-gray-800 px-6 py-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
+          <p className="text-2xl font-bold text-purple-600">{sent}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Emails Sent</p>
+        </div>
+      </div>
+      <button
+        onClick={() => dispatch({ type: 'RESET' })}
+        className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 transition-colors"
+      >
+        Start New Search
+      </button>
+    </div>
+  );
+}
+
 function StepContent() {
   const { state } = useLeadContext();
   switch (state.currentStep) {
@@ -35,6 +74,7 @@ function StepContent() {
     case 2: return <EnrichmentPanel />;
     case 3: return <CRMPanel />;
     case 4: return <EmailOutreach />;
+    case 5: return <CompletionScreen />;
     default: return <SearchForm />;
   }
 }
